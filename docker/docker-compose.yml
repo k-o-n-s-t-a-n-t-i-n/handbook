@@ -1,0 +1,44 @@
+# NGINX PHP-7-FPM MARIADB PHPMYADMIN
+#
+# В папке с PHP создать докерфайл Dockerfile содержащий:
+# FROM php:7-fpm
+# RUN docker-php-ext-install pdo pdo_mysql
+# Это необходимо чтобы добавить в пхп драйвер pdo pdo_mysql
+#
+
+web:
+    image: nginx:latest
+    ports:
+        - "8080:80"
+    volumes:
+        - ./code:/code
+        - ./site.conf:/etc/nginx/conf.d/site.conf
+    links:
+        - php
+
+php:
+    build: ./php/
+    volumes:
+        - ./code:/code
+    links:
+        - db
+db:
+      image: mariadb
+      environment:
+          - MYSQL_ROOT_PASSWORD=test
+          - MYSQL_DATABASE=radio
+      volumes:
+          - ./database:/var/lib/mysql
+phpmyadmin:
+      image: phpmyadmin/phpmyadmin
+      container_name: phpmyadmin
+      environment:
+          - PMA_ARBITRARY=1
+          - PMA_HOST=db
+      restart: always
+      ports:
+          - 8081:80
+      volumes:
+          - /sessions
+      links:
+          - db
