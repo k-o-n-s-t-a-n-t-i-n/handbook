@@ -1,0 +1,45 @@
+# NGINX PHP-7-FPM MARIADB PHPMYADMIN COMPOSER
+#
+
+web:
+    image: nginx:latest
+    ports:
+        - "80:80"
+    volumes:
+        - ./code:/code
+        - ./nginx/site.conf:/etc/nginx/conf.d/site.conf
+    links:
+        - php
+php:
+    build: ./php/
+    volumes:
+        - ./code:/code
+        - ./php/www.conf:/usr/local/etc/php-fpm.d/www.conf
+    links:
+        - db
+composer:
+    image: composer:latest
+    user: ${CURRENT_UID}
+    working_dir: /code
+    volumes:
+            - ./code:/code
+    command: install
+db:
+    image: mariadb
+    environment:
+        - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+        - MYSQL_DATABASE=${MYSQL_DATABASE}
+    volumes:
+        - ./db:/var/lib/mysql
+phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    environment:
+        - PMA_ARBITRARY=${PMA_ARBITRARY}
+        - PMA_HOST=${PMA_HOST}
+    restart: always
+    ports:
+        - 8081:88
+    volumes:
+        - /sessions
+    links:
+        - db
